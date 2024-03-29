@@ -9,6 +9,7 @@ namespace _2180604129_TranQuyenQuy.Controllers
     {
         private readonly IProductRepository _productRepository;
         private readonly ICategoryRepository _categoryRepository;
+
         public ProductController(IProductRepository productRepository,
         ICategoryRepository categoryRepository)
         {
@@ -31,10 +32,15 @@ namespace _2180604129_TranQuyenQuy.Controllers
         }
         // Xử lý thêm sản phẩm mới
         [HttpPost]
-        public async Task<IActionResult> Add(Product product)
+        public async Task<IActionResult> Add(Product product,IFormFile imageUrl)
         {
             if (ModelState.IsValid)
             {
+                if (imageUrl != null)
+                {
+                    // Lưu hình ảnh đại diện
+                    product.ImageUrl = await SaveImage(imageUrl);
+                }
                 await _productRepository.AddAsync(product);
                 return RedirectToAction(nameof(Index));
             }
@@ -43,10 +49,22 @@ namespace _2180604129_TranQuyenQuy.Controllers
             ViewBag.Categories = new SelectList(categories, "Id", "Name");
             return View(product);
         }
+        private async Task<string> SaveImage(IFormFile image)
+        {
+            var savePath = Path.Combine("wwwroot/images", image.FileName); // Thay
+
+    using (var fileStream = new FileStream(savePath, FileMode.Create))
+            {
+                await image.CopyToAsync(fileStream);
+            }
+            return "/images/" + image.FileName; // Trả về đường dẫn tương đối
+        }
         // Hiển thị thông tin chi tiết sản phẩm
         public async Task<IActionResult> Display(int id)
         {
             var product = await _productRepository.GetByIdAsync(id);
+            var category = await _categoryRepository.GetByIdAsync(product.CategoryId);
+            ViewBag.Category = category.Name;
             if (product == null)
             {
                 return NotFound();
@@ -70,7 +88,7 @@ namespace _2180604129_TranQuyenQuy.Controllers
         }
         // Xử lý cập nhật sản phẩm
         [HttpPost]
-        public async Task<IActionResult> Update(int id, Product product)
+        public async Task<IActionResult> Update(int id, Product product, IFormFile imageUrl)
         {
             if (id != product.Id)
             {
@@ -78,6 +96,11 @@ namespace _2180604129_TranQuyenQuy.Controllers
             }
             if (ModelState.IsValid)
             {
+                if (imageUrl != null)
+                {
+                    // Lưu hình ảnh đại diện
+                    product.ImageUrl = await SaveImage(imageUrl);
+                }
                 await _productRepository.UpdateAsync(product);
                 return RedirectToAction(nameof(Index));
             }
@@ -87,6 +110,8 @@ namespace _2180604129_TranQuyenQuy.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var product = await _productRepository.GetByIdAsync(id);
+            var category = await _categoryRepository.GetByIdAsync(product.CategoryId);
+            ViewBag.Category = category.Name;
             if (product == null)
             {
                 return NotFound();
