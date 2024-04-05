@@ -1,12 +1,16 @@
 ﻿using _2180604129_TranQuyenQuy.Models;
 using _2180604129_TranQuyenQuy.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace _2180604129_TranQuyenQuy.Controllers
 {
+    //[Area("Admin")]
+    [Authorize(Roles = SD.Role_Admin)]
     public class ProductController : Controller
     {
+
         private readonly IProductRepository _productRepository;
         private readonly ICategoryRepository _categoryRepository;
 
@@ -32,7 +36,7 @@ namespace _2180604129_TranQuyenQuy.Controllers
         }
         // Xử lý thêm sản phẩm mới
         [HttpPost]
-        public async Task<IActionResult> Add(Product product,IFormFile imageUrl)
+        public async Task<IActionResult> Add(Product product, IFormFile imageUrl)
         {
             if (ModelState.IsValid)
             {
@@ -53,7 +57,7 @@ namespace _2180604129_TranQuyenQuy.Controllers
         {
             var savePath = Path.Combine("wwwroot/images", image.FileName); // Thay
 
-    using (var fileStream = new FileStream(savePath, FileMode.Create))
+            using (var fileStream = new FileStream(savePath, FileMode.Create))
             {
                 await image.CopyToAsync(fileStream);
             }
