@@ -23,7 +23,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LogoutPath = $"/Identity/Account/Logout";
     options.LogoutPath = $"/Identity/Account/AccessDenied"; 
 });
-
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 builder.Services.AddRazorPages();
 // Add services to the container.
@@ -41,20 +47,15 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+app.MapRazorPages();
 app.UseRouting();
-
 app.UseAuthorization();
-
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Product}/{action=Index}/{id?}");
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllerRoute(name: "Admin", pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
-    endpoints.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
-}
-);
-app.MapRazorPages();
+app.MapControllerRoute(
+        name: "Admin", 
+        pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
 app.Run();
